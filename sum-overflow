@@ -1,0 +1,48 @@
+#Check sum overflow
+.data
+Message1: .asciiz "Input a: "
+Message2: .asciiz "Input b: "
+Overflow: .asciiz "a+b is overflow"
+None: .asciiz "a+b is not overflow"
+.text
+
+input:	
+	li $v0,4
+	la $a0, Message1
+	syscall
+	li $v0,5
+	syscall
+	addi $s1,$v0,0
+	li $v0,4
+	la $a0, Message2
+	syscall
+	li $v0,5
+	syscall
+	addi $s2,$v0,0
+start:
+	li $t0,0 
+	addu $s3,$s1,$s2	#sum of s1, s2 in s3
+	xor $t1, $s1, $s2	#test if s1 and s2 same sign
+	bltz $t1, EXIT		#exit if not (overflow is possible only with operands of same sign)
+	slt $t2,$s3,$s1		#compare sum and s1
+	bltz $s1,NEGATIVE	#test if s1 (and s2) negative
+	beq $t2,$0,EXIT 	#if s1 (and s2) not negative, s3 not less than s1, not over flow
+	j OVERFLOW		#if s1 (and s2) not negative, s3 less than s1, overflow
+NEGATIVE:
+	bne $t2,$0,EXIT 	#if s1 (and s2) negative, s3 less than s1, not overflow
+				#if s3 not less than s1, overflow
+OVERFLOW:
+	li $t0,1 		#overflow 
+EXIT:
+
+output: li $v0,4
+	beq $t0,0,printNone
+printOverflow:
+	la $a0, Overflow
+	syscall
+	j DONE
+printNone:
+	la $a0, None
+	syscall
+DONE:
+	
